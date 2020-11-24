@@ -3,13 +3,30 @@ import Schedule from '../models/schedule';
 
 export default class ScheduleController {
 
-  schedules(request: Request, response: Response) {
-    response.send('Você está na rota de atendimento e executando um GET.');
+  index(request: Request, response: Response) {
+    Schedule.list(response);
   }
 
   create(request: Request, response: Response) {
     const { owner, pet, service, date, status, notes } = request.body;
     Schedule.create({ owner, pet, service, date, status, notes }, response);
-    response.send('Você está na realizando um post');
+  }
+
+  show(request: Request, response: Response) {
+    const { id } = request.params;
+    Schedule.findById(Number(id), response);
+  }
+
+  update(request: Request, response: Response) {
+    const { id } = request.params;
+    const values = request.body;
+
+    Schedule.edit(Number(id), values, response);
+  }
+
+  delete(request: Request, response: Response) {
+    const { id } = request.params;
+
+    Schedule.delete(Number(id), response);
   }
 }
