@@ -11,7 +11,16 @@ class Connection {
   }
 
   createAppoitment() {
-    const sql = 'CREATE TABLE IF NOT EXISTS Appointments (id int NOT NULL AUTO_INCREMENT, owner varchar(50) NOT NULL, pet varchar(20), service varchar(20) NOT NULL, status varchar(20) NOT NULL, notes text, PRIMARY KEY(id))';
+    const sql = `CREATE TABLE IF NOT EXISTS Appointments
+      (id int NOT NULL AUTO_INCREMENT,
+        owner varchar(50) NOT NULL,
+        pet varchar(20),
+        service varchar(20) NOT NULL,
+        date datetime,
+        createdat datetime,
+        status varchar(20) NOT NULL,
+        notes text, PRIMARY KEY(id)
+      )`;
 
     this._conexao.query(sql, err => {
       if(err) {

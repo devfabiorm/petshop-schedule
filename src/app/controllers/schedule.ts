@@ -8,8 +8,8 @@ export default class ScheduleController {
   }
 
   create(request: Request, response: Response) {
-    const { owner, pet, service, status, notes } = request.body;
-    Schedule.create({ owner, pet, service, status, notes });
+    const { owner, pet, service, date, status, notes } = request.body;
+    Schedule.create({ owner, pet, service, date, status, notes }, response);
     response.send('Você está na realizando um post');
   }
 }
