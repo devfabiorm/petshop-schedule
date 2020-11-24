@@ -49,7 +49,7 @@ class Schedule {
         if(err) {
           response.status(400).json(err);
         } else {
-          response.status(201).json(rows);
+          response.status(201).json(appointment);
         }
       });
     }
@@ -89,7 +89,7 @@ class Schedule {
 
     connection.query(sql, [values, id], (err, rows) => {
       if(err) response.status(400).json(err);
-      else response.status(200).json(rows);
+      else response.status(200).json([values, id]);
     });
   }
 
@@ -98,7 +98,7 @@ class Schedule {
 
     connection.query(sql, id, (err, rows) => {
       if(err) response.status(400).json(err);
-      else response.status(204).end();
+      else response.status(200).json({ id });
     });
   }
 }
