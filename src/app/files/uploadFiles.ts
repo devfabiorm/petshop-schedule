@@ -1,10 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-fs.readFile(path.join(path.join(__dirname, '..', '..', 'assets', 'salsicha.jpg')), (err, buffer) => {
-  console.log('A imagem foi bufferizada');
-
-  fs.writeFile(path.join(__dirname, '..', '..', 'assets', 'salsicha2.jpg'), buffer, err => {
-    console.log('A imagem foi escrita');
-  })
-})
+fs.createReadStream(path.join(__dirname, '..', '..', 'assets', 'salsicha.jpg'))
+  .pipe(fs.createWriteStream(path.join(__dirname, '..', '..', 'assets', 'salsicha-stream.jpg')))
+  .on('finish', () => console.log('Terminado'));
