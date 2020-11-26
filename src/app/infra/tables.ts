@@ -8,6 +8,7 @@ class Connection {
     this._conexao = conection;
 
     this.createAppoitment();
+    this.createPet();
   }
 
   createAppoitment() {
@@ -28,6 +29,20 @@ class Connection {
       } else {
         console.log('Tabela de atendimentos criada com sucesso.');
       }
+    });
+  }
+
+  createPet() {
+    const query = ` CREATE TABLE IF NOT EXISTS Pets
+      (id int NOT NULL AUTO_INCREMENT,
+        name varchar(50),
+        photo varchar(200),
+        PRIMARY KEY (id)
+      )`;
+
+    this._conexao.query(query, err => {
+      if(err) console.log(err);
+      else console.log('Tabela Pet foi criada com sucesso.');
     });
   }
 }
