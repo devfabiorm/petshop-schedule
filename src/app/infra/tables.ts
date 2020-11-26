@@ -14,7 +14,7 @@ class Connection {
   createAppoitment() {
     const sql = `CREATE TABLE IF NOT EXISTS Appointments
       (id int NOT NULL AUTO_INCREMENT,
-        owner varchar(50) NOT NULL,
+        owner varchar(11) NOT NULL,
         pet varchar(20),
         service varchar(20) NOT NULL,
         date datetime,

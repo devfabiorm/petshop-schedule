@@ -1,11 +1,18 @@
+import axios from 'axios';
 import { response, Response } from 'express';
 import moment from 'moment';
 
 import connection from '../infra/conection';
 
+interface Owner {
+  cpf: string;
+  name: string;
+  birthday: string;
+}
+
 interface Appointment {
   id?: number;
-  owner: string;
+  owner: string | Owner;
   pet?: string;
   service: string;
   date: string;
@@ -13,13 +20,14 @@ interface Appointment {
   notes: string;
 }
 
+
 class Schedule {
   create(appointment: Appointment, response: Response) {
     const createdat = moment().format('YYYY-MM-DD HH:mm:ss');
     const date = moment(appointment.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
 
     const validDate = moment(date).isSameOrAfter(createdat);
-    const validOwner = appointment.owner.length >= 5;
+    const validOwner = String(appointment.owner).length >= 5;
 
     const validations = [
       {
@@ -49,7 +57,7 @@ class Schedule {
         if(err) {
           response.status(400).json(err);
         } else {
-          response.status(201).json(appointment);
+          response.status(201).json({...appointment, id: rows.insertId});
         }
       });
     }
@@ -70,10 +78,13 @@ class Schedule {
   findById(id: number, response: Response) {
     const sql = 'SELECT * FROM Appointments WHERE id = ?';
 
-    connection.query(sql, id, (err, rows) => {
-      
+    connection.query(sql, id, async (err, rows: Appointment[]) => {
+      const cpf = rows[0].owner;
+
       if(err) response.status(400).json(err);
       else {
+        let { data: owner } = await axios.get<Owner>(`http://localhost:8082/${cpf}`);
+        rows[0].owner = owner;
         response.status(200).json(rows[0]);
       }
     });
