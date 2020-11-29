@@ -1,14 +1,6 @@
-import axios from 'axios';
-import { response, Response } from 'express';
 import moment from 'moment';
 
 import AppointmentRepository, { IAppointment } from '../repositories/appointment';
-
-interface Owner {
-  cpf: string;
-  name: string;
-  birthday: string;
-}
 
 interface IValidation {
   field: string;
