@@ -1,6 +1,6 @@
 import customExprtess from '../config/customExpress';
-import conection from './infra/conection';
-import Tabelas from './infra/tables';
+import conection from './infra/database/conection';
+import Tabelas from './infra/database/tables';
 
 conection.connect(err => {
   if(err) console.log(err);

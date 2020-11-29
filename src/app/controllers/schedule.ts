@@ -8,8 +8,10 @@ export default class ScheduleController {
   }
 
   create(request: Request, response: Response) {
-    const { owner, pet, service, date, status, notes } = request.body;
-    Schedule.create({ owner, pet, service, date, status, notes }, response);
+    const appointment = request.body;
+    Schedule.create(appointment)
+      .then(createdAppointment => response.status(200).json(createdAppointment))
+      .catch(erros => response.status(400).json(erros));
   }
 
   show(request: Request, response: Response) {

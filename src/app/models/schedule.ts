@@ -2,7 +2,7 @@ import axios from 'axios';
 import { response, Response } from 'express';
 import moment from 'moment';
 
-import connection from '../infra/conection';
+import AppointmentRepository, { IAppointment } from '../repositories/appointment';
 
 interface Owner {
   cpf: string;
@@ -10,56 +10,73 @@ interface Owner {
   birthday: string;
 }
 
-interface Appointment {
-  id?: number;
-  owner: string | Owner;
-  pet?: string;
-  service: string;
-  date: string;
-  status: string;
-  notes: string;
+interface IValidation {
+  field: string;
+  valid: Function;
+  message: string;
 }
 
+interface IValidationProps {
+  date: {
+    date: string;
+    createdat: string
+  },
+  onwer: {
+    numChars: number
+  }
+}
 
 class Schedule {
-  create(appointment: Appointment, response: Response) {
-    const createdat = moment().format('YYYY-MM-DD HH:mm:ss');
-    const date = moment(appointment.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
+  private _validations: IValidation[] = [];
+  private _validDate: Function = () => {};
+  private _validOwner: Function = () => {};
+  private _validate: Function = () => {};
 
-    const validDate = moment(date).isSameOrAfter(createdat);
-    const validOwner = String(appointment.owner).length >= 5;
+  constructor() {
+    this._validDate = ({ date: { date, createdat } } : IValidationProps):boolean => moment(date).isSameOrAfter(createdat);
+    this._validOwner = ({onwer: { numChars }} : IValidationProps): boolean => numChars >= 5;
+    this._validate = (params: any) => this._validations.filter(filteredField => {
+      const { field } = filteredField;
+      const param = params[field];
 
-    const validations = [
+      return filteredField.valid(param);
+    });
+
+    this._validations = [
       {
         field: 'date',
-        valid: validDate,
+        valid: this._validDate,
         message: 'A data deve ser maior ou igual a data atual'
       },
       {
         field: 'owner',
-        valid: validOwner,
+        valid: this._validOwner,
         message: 'O nome do cliente deve conter pelo menso cinco caracteres'
       }
     ];
+  }
 
-    const errors = validations.filter(field => !field.valid);
+  create(appointment: IAppointment) {
+    const createdat = moment().format('YYYY-MM-DD HH:mm:ss');
+    const date = moment(appointment.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
+
+    const params = {
+      date: { date, createdat },
+      owner: { numChars: String(appointment.owner).length }
+    };
+    
+    const errors = this._validate(params);
     const validatedErrors = errors.length;
 
     if(validatedErrors) {
-      console.log('if')
-      response.status(400).json(errors);
-    } else {
-      console.log('else')
-      const sql = 'INSERT INTO Appointments set ?';
+      return new Promise((resolve, reject) => reject(errors));
+    } else {      
       const formatedAppointment = {...appointment, date, createdat };
 
-      connection.query(sql, formatedAppointment, (err, rows) => {
-        if(err) {
-          response.status(400).json(err);
-        } else {
-          response.status(201).json({...appointment, id: rows.insertId});
-        }
-      });
+      return AppointmentRepository.create(formatedAppointment)
+        .then((rows: any) => {
+          return {...appointment, id: rows.insertId};
+        });
     }
   }
 
@@ -78,7 +95,7 @@ class Schedule {
   findById(id: number, response: Response) {
     const sql = 'SELECT * FROM Appointments WHERE id = ?';
 
-    connection.query(sql, id, async (err, rows: Appointment[]) => {
+    connection.query(sql, id, async (err, rows: IAppointment[]) => {
       const cpf = rows[0].owner;
 
       if(err) response.status(400).json(err);

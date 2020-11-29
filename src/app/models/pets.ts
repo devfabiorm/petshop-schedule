@@ -1,7 +1,7 @@
 import { Response } from 'express';
 
-import conection from '../infra/conection';
-import fileUpload from '../files/uploadFiles';
+import conection from '../infra/database/conection';
+import fileUpload from '../infra/files/uploadFiles';
 
 interface IPet {
   id?: number;
