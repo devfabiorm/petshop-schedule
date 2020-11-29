@@ -1,7 +1,9 @@
 import connection from './conection';
 
+import { IAppointment } from '../../repositories/appointment';
+
 const runQuery = (query: string, params?: any) => {
-  return new Promise((resolve, reject) => {
+  return new Promise<IAppointment[]>((resolve, reject) => {
     connection.query(query, params, (errors, rows, fields) => {
       if(errors) {
         reject(errors);

@@ -12,60 +12,69 @@ interface Owner {
 
 interface IValidation {
   field: string;
-  valid: Function;
+  valid: any;
   message: string;
 }
 
-interface IValidationProps {
-  date: {
-    date: string;
-    createdat: string
-  },
-  onwer: {
-    numChars: number
-  }
+
+interface IValidateDate {
+  date: string;
+  createdat: string
 }
 
+interface IValidateOnwer {
+    numChars: number
+  }
+
 class Schedule {
-  private _validations: IValidation[] = [];
-  private _validDate: Function = () => {};
-  private _validOwner: Function = () => {};
+  private _validations: IValidation[];
+  private _validDate: (params: IValidateDate) => boolean;
+  private _validOwner: (params: IValidateOnwer) => boolean;
   private _validate: Function = () => {};
 
   constructor() {
-    this._validDate = ({ date: { date, createdat } } : IValidationProps):boolean => moment(date).isSameOrAfter(createdat);
-    this._validOwner = ({onwer: { numChars }} : IValidationProps): boolean => numChars >= 5;
+    this._validDate = ({ date, createdat }: IValidateDate): boolean => moment(date).isSameOrAfter(createdat);
+    this._validOwner = ({ numChars }: IValidateOnwer): boolean  => numChars >= 5;
     this._validate = (params: any) => this._validations.filter(filteredField => {
       const { field } = filteredField;
       const param = params[field];
 
-      return filteredField.valid(param);
+      console.log(!filteredField.valid(param))
+      return !filteredField.valid(param);
     });
 
     this._validations = [
       {
         field: 'date',
         valid: this._validDate,
-        message: 'A data deve ser maior ou igual a data atual'
+        message: 'A data de agendamento deve ser maior ou igual a data atual.'
       },
       {
         field: 'owner',
         valid: this._validOwner,
-        message: 'O nome do cliente deve conter pelo menso cinco caracteres'
+        message: 'O CPF do dono deve conter o número certo de caracteres'
       }
     ];
   }
 
   create(appointment: IAppointment) {
     const createdat = moment().format('YYYY-MM-DD HH:mm:ss');
-    const date = moment(appointment.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
+    const date = moment(
+      new Date(...appointment.date.split('/')
+        .reverse()
+        .map((item: any, index) => item - index%2) as [number, number, number]
+      )
+    ).format('YYYY-MM-DD HH:mm:ss');
 
     const params = {
       date: { date, createdat },
       owner: { numChars: String(appointment.owner).length }
     };
+
+
     
     const errors = this._validate(params);
+    console.log(errors.length)
     const validatedErrors = errors.length;
 
     if(validatedErrors) {
@@ -80,54 +89,26 @@ class Schedule {
     }
   }
 
-  list(response: Response) {
-    const sql = 'SELECT * FROM Appointments';
-
-    connection.query(sql, (err, rows) => {
-      if(err) {
-        response.status(400).json(err);
-      } else {
-        response.status(200).json(rows);
-      }
-    });
+  list() {
+    return AppointmentRepository.list();
   }
 
-  findById(id: number, response: Response) {
-    const sql = 'SELECT * FROM Appointments WHERE id = ?';
-
-    connection.query(sql, id, async (err, rows: IAppointment[]) => {
-      const cpf = rows[0].owner;
-
-      if(err) response.status(400).json(err);
-      else {
-        let { data: owner } = await axios.get<Owner>(`http://localhost:8082/${cpf}`);
-        rows[0].owner = owner;
-        response.status(200).json(rows[0]);
-      }
-    });
+  findById(id: number) {
+    return AppointmentRepository.findById(id)
   }
 
-  edit(id: number, values: any, response: Response) {
+  edit(id: number, values: any) {
 
     if(values.date) {
       values.date = moment(values.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:mm:ss');
     }
 
-    const sql = 'UPDATE Appointments SET ? WHERE id = ?';
-
-    connection.query(sql, [values, id], (err, rows) => {
-      if(err) response.status(400).json(err);
-      else response.status(200).json([values, id]);
-    });
+    return AppointmentRepository.update(id, values);
   }
 
-  delete(id: number, response: Response) {
-    const sql = 'DELETE FROM Appointments WHERE id = ?';
-
-    connection.query(sql, id, (err, rows) => {
-      if(err) response.status(400).json(err);
-      else response.status(200).json({ id });
-    });
+  delete(id: number) {
+    
+    return AppointmentRepository.delete(id);
   }
 }
 
